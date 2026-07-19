@@ -27,6 +27,69 @@ def upload_to_catbox(file_path):
         print(f"Error uploading to Catbox: {e}")
         return None
 
+def upload_to_file_io(file_path):
+    """
+    Uploads a video to file.io as a fallback.
+    """
+    print("Uploading video to file.io for temporary public hosting...")
+    try:
+        url = "https://file.io"
+        with open(file_path, "rb") as f:
+            files = {"file": f}
+            r = requests.post(url, files=files, timeout=60)
+        if r.status_code == 200:
+            res = r.json()
+            if res.get("success"):
+                public_url = res.get("link")
+                print(f"file.io public URL: {public_url}")
+                return public_url
+        print(f"file.io upload failed: {r.status_code} - {r.text}")
+        return None
+    except Exception as e:
+        print(f"Error uploading to file.io: {e}")
+        return None
+
+def upload_to_transfer_sh(file_path):
+    """
+    Uploads a video to transfer.sh as a fallback.
+    """
+    print("Uploading video to transfer.sh for temporary public hosting...")
+    try:
+        filename = os.path.basename(file_path)
+        url = f"https://transfer.sh/{filename}"
+        with open(file_path, "rb") as f:
+            r = requests.put(url, data=f, timeout=60)
+        if r.status_code == 200:
+            public_url = r.text.strip()
+            print(f"transfer.sh public URL: {public_url}")
+            return public_url
+        print(f"transfer.sh upload failed: {r.status_code} - {r.text}")
+        return None
+    except Exception as e:
+        print(f"Error uploading to transfer.sh: {e}")
+        return None
+
+def get_temporary_public_url(file_path):
+    """
+    Tries to upload the video to Catbox, file.io, or transfer.sh sequentially.
+    """
+    # 1. Try Catbox
+    url = upload_to_catbox(file_path)
+    if url:
+        return url
+        
+    # 2. Try file.io
+    url = upload_to_file_io(file_path)
+    if url:
+        return url
+        
+    # 3. Try transfer.sh
+    url = upload_to_transfer_sh(file_path)
+    if url:
+        return url
+        
+    return None
+
 def upload_instagram_reels(video_url, caption, access_token, instagram_account_id):
     """
     Uploads the video to Instagram Reels using the Meta Graph API.
@@ -184,7 +247,7 @@ def upload_to_meta(file_path, caption):
     print("="*50)
     
     # 1. Upload to temporary public hosting
-    public_url = upload_to_catbox(file_path)
+    public_url = get_temporary_public_url(file_path)
     if not public_url:
         print("Skipping Meta uploads because temporary public hosting failed.")
         return
