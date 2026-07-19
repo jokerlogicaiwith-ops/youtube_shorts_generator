@@ -2,9 +2,9 @@ name: Daily YouTube Shorts Uploader
 
 on:
   schedule:
-    # Runs daily at 10:00 AM UTC (approx 3:30 PM IST)
-    # Aap is schedule cron ko edit karke time change kar sakte hain.
-    - cron: '0 10 * * *'
+    # Runs daily 3 times at peak viral hours (8:30 AM, 1:30 PM, and 7:30 PM IST)
+    # UTC equivalents: 3:00 AM UTC, 8:00 AM UTC, 2:00 PM UTC
+    - cron: '0 3,8,14 * * *'
   workflow_dispatch: # Allows manual trigger from GitHub Actions UI
 
 jobs:
