@@ -147,6 +147,14 @@ def main():
     except Exception as e:
         print(f"Error uploading video: {e}")
 
+    # 7b. Upload to Instagram & Facebook Reels
+    try:
+        from meta_uploader import upload_to_meta
+        caption = f"{title}\n\n{description}"
+        upload_to_meta(final_output, caption)
+    except Exception as e:
+        print(f"Error uploading to Meta: {e}")
+
     # 8. Clean up temp folder
     print("Cleaning up temporary files...")
     for f in [temp_audio, temp_subs, temp_video]:
