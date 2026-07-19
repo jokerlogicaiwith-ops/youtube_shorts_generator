@@ -27,6 +27,29 @@ def upload_to_catbox(file_path):
         print(f"Error uploading to Catbox: {e}")
         return None
 
+def upload_to_uguu(file_path):
+    """
+    Uploads a file to uguu.se for temporary public hosting.
+    Uguu keeps files for 24 hours.
+    """
+    print("Uploading video to uguu.se for temporary public hosting...")
+    try:
+        url = "https://uguu.se/upload"
+        with open(file_path, "rb") as f:
+            files = {"files[]": f}
+            r = requests.post(url, files=files, timeout=60)
+        if r.status_code == 200:
+            res = r.json()
+            if res.get("success"):
+                public_url = res.get("files")[0].get("url")
+                print(f"Uguu.se public URL: {public_url}")
+                return public_url
+        print(f"Uguu.se upload failed: {r.status_code} - {r.text}")
+        return None
+    except Exception as e:
+        print(f"Error uploading to Uguu.se: {e}")
+        return None
+
 def upload_to_file_io(file_path):
     """
     Uploads a video to file.io as a fallback.
@@ -49,42 +72,22 @@ def upload_to_file_io(file_path):
         print(f"Error uploading to file.io: {e}")
         return None
 
-def upload_to_transfer_sh(file_path):
-    """
-    Uploads a video to transfer.sh as a fallback.
-    """
-    print("Uploading video to transfer.sh for temporary public hosting...")
-    try:
-        filename = os.path.basename(file_path)
-        url = f"https://transfer.sh/{filename}"
-        with open(file_path, "rb") as f:
-            r = requests.put(url, data=f, timeout=60)
-        if r.status_code == 200:
-            public_url = r.text.strip()
-            print(f"transfer.sh public URL: {public_url}")
-            return public_url
-        print(f"transfer.sh upload failed: {r.status_code} - {r.text}")
-        return None
-    except Exception as e:
-        print(f"Error uploading to transfer.sh: {e}")
-        return None
-
 def get_temporary_public_url(file_path):
     """
-    Tries to upload the video to Catbox, file.io, or transfer.sh sequentially.
+    Tries to upload the video to Uguu.se, Catbox, or file.io sequentially.
     """
-    # 1. Try Catbox
+    # 1. Try Uguu.se (Most reliable across Cloud / Local networks)
+    url = upload_to_uguu(file_path)
+    if url:
+        return url
+        
+    # 2. Try Catbox
     url = upload_to_catbox(file_path)
     if url:
         return url
         
-    # 2. Try file.io
+    # 3. Try file.io
     url = upload_to_file_io(file_path)
-    if url:
-        return url
-        
-    # 3. Try transfer.sh
-    url = upload_to_transfer_sh(file_path)
     if url:
         return url
         
